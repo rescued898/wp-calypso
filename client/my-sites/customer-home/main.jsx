@@ -197,7 +197,7 @@ class Home extends Component {
 			if ( siteIsUnlaunched || isAtomic ) {
 				//Only show pre-launch, or for Atomic sites
 				return (
-					<React.Fragment>
+					<>
 						{ siteId && 'theme' === checklistMode && <QueryActiveTheme siteId={ siteId } /> }
 						{ currentThemeId && (
 							<QueryCanonicalTheme themeId={ currentThemeId } siteId={ siteId } />
@@ -216,7 +216,7 @@ class Home extends Component {
 							}
 							subHeaderText={ this.getChecklistSubHeaderText() }
 						/>
-					</React.Fragment>
+					</>
 				);
 			}
 		}
@@ -224,7 +224,7 @@ class Home extends Component {
 		// Show a congratulatory message post-launch
 		if ( ! siteIsUnlaunched && 'launched' === checklistMode ) {
 			return (
-				<React.Fragment>
+				<>
 					<img
 						src="/calypso/images/signup/confetti.svg"
 						aria-hidden="true"
@@ -235,7 +235,7 @@ class Home extends Component {
 						headerText={ translate( 'You launched your site!' ) }
 						subHeaderText={ this.getChecklistSubHeaderText() }
 					/>
-				</React.Fragment>
+				</>
 			);
 		}
 
