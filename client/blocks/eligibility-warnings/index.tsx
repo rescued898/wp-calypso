@@ -15,6 +15,7 @@ import TrackComponentView from 'lib/analytics/track-component-view';
 import { recordTracksEvent } from 'state/analytics/actions';
 import { getEligibility, isEligibleForAutomatedTransfer } from 'state/automated-transfer/selectors';
 import { getSelectedSiteId } from 'state/ui/selectors';
+import isUnlaunchedSite from 'state/selectors/is-unlaunched-site';
 import { Button, Card } from '@automattic/components';
 import QueryEligibility from 'components/data/query-atat-eligibility';
 import HoldList, { hasBlockingHold } from './hold-list';
@@ -37,6 +38,7 @@ export const EligibilityWarnings = ( {
 	eligibilityData,
 	isEligible,
 	isPlaceholder,
+	isUnlaunched,
 	onProceed,
 	siteId,
 	translate,
@@ -61,7 +63,12 @@ export const EligibilityWarnings = ( {
 
 			<Card>
 				{ ( isPlaceholder || listHolds.length > 0 ) && (
-					<HoldList context={ context } holds={ listHolds } isPlaceholder={ isPlaceholder } />
+					<HoldList
+						context={ context }
+						holds={ listHolds }
+						isPlaceholder={ isPlaceholder }
+						isUnlaunched={ isUnlaunched }
+					/>
 				) }
 
 				{ isEligible && 0 === listHolds.length && 0 === warnings.length && (
@@ -111,12 +118,14 @@ const mapStateToProps = ( state: object ) => {
 	const siteId = getSelectedSiteId( state );
 	const eligibilityData = getEligibility( state, siteId );
 	const isEligible = isEligibleForAutomatedTransfer( state, siteId );
+	const isUnlaunched = siteId !== null && isUnlaunchedSite( state, siteId );
 	const dataLoaded = !! eligibilityData.lastUpdate;
 
 	return {
 		eligibilityData,
 		isEligible,
 		isPlaceholder: ! dataLoaded,
+		isUnlaunched,
 		siteId,
 	};
 };
