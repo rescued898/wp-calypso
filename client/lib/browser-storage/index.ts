@@ -18,7 +18,7 @@ const STORE_NAME = 'calypso_store';
 const SANITY_TEST_KEY = 'browser-storage-sanity-test';
 
 const getDB = once( () => {
-	const request = indexedDB.open( DB_NAME, DB_VERSION );
+	const request = window.indexedDB.open( DB_NAME, DB_VERSION );
 	return new Promise< IDBDatabase >( ( resolve, reject ) => {
 		try {
 			if ( request ) {
@@ -126,7 +126,7 @@ export function bypassPersistentStorage( shouldBypassPersistentStorage: boolean 
  * Get a stored item.
  *
  * @param key The stored item key.
- * @return A promise with the stored value. `undefined` if missing.
+ * @returns A promise with the stored value. `undefined` if missing.
  */
 export async function getStoredItem< T >( key: string ): Promise< T | undefined > {
 	if ( shouldBypass ) {
@@ -135,7 +135,7 @@ export async function getStoredItem< T >( key: string ): Promise< T | undefined 
 
 	const idbSupported = await supportsIDB();
 	if ( ! idbSupported ) {
-		const valueString = localStorage.getItem( key );
+		const valueString = window.localStorage.getItem( key );
 		if ( valueString === undefined || valueString === null ) {
 			return undefined;
 		}
@@ -151,7 +151,7 @@ export async function getStoredItem< T >( key: string ): Promise< T | undefined 
  *
  * @param key The key to store the item under.
  * @param value The value of the item to be stored.
- * @return A promise that gets resolved when the item is successfully stored.
+ * @returns A promise that gets resolved when the item is successfully stored.
  */
 export async function setStoredItem< T >( key: string, value: T ): Promise< void > {
 	if ( shouldBypass ) {
@@ -160,7 +160,7 @@ export async function setStoredItem< T >( key: string, value: T ): Promise< void
 
 	const idbSupported = await supportsIDB();
 	if ( ! idbSupported ) {
-		localStorage.setItem( key, JSON.stringify( value ) );
+		window.localStorage.setItem( key, JSON.stringify( value ) );
 		return;
 	}
 
@@ -170,7 +170,7 @@ export async function setStoredItem< T >( key: string, value: T ): Promise< void
 /**
  * Clear all stored items.
  *
- * @return A promise that gets resolved when all items are successfully cleared.
+ * @returns A promise that gets resolved when all items are successfully cleared.
  */
 export async function clearStorage(): Promise< void > {
 	if ( shouldBypass ) {
@@ -179,7 +179,7 @@ export async function clearStorage(): Promise< void > {
 
 	const idbSupported = await supportsIDB();
 	if ( ! idbSupported ) {
-		localStorage.clear();
+		window.localStorage.clear();
 		return;
 	}
 
