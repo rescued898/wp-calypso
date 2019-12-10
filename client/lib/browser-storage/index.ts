@@ -4,6 +4,7 @@
 import { once } from 'lib/memoize-last';
 import {
 	getStoredItem as bypassGet,
+	getAllStoredItems as bypassGetAll,
 	setStoredItem as bypassSet,
 	clearStorage as bypassClear,
 	activate as activateBypass,
@@ -66,6 +67,39 @@ function idbGet< T >( key: string ): Promise< T | undefined > {
 				const error = () => reject( transaction.error );
 
 				transaction.oncomplete = success;
+				transaction.onabort = error;
+				transaction.onerror = error;
+			} )
+			.catch( err => reject( err ) );
+	} );
+}
+
+type EventTargetWithCursorResult = EventTarget & { result: IDBCursorWithValue | null };
+
+function idbGetAll< T >(): Promise< { [ key: string ]: T } > {
+	return new Promise( ( resolve, reject ) => {
+		getDB()
+			.then( db => {
+				const results: { [ key: string ]: T } = {};
+				const transaction = db.transaction( STORE_NAME, 'readonly' );
+				const getAll = transaction.objectStore( STORE_NAME ).openCursor();
+
+				const success = ( event: Event ) => {
+					const cursor = ( event?.target as EventTargetWithCursorResult )?.result;
+					if ( cursor ) {
+						const { primaryKey: key, value } = cursor;
+						if ( key && typeof key === 'string' && key !== SANITY_TEST_KEY ) {
+							results[ key ] = value;
+						}
+						cursor.continue();
+					} else {
+						// No more results.
+						resolve( results );
+					}
+				};
+				const error = () => reject( transaction.error );
+
+				getAll.onsuccess = success;
 				transaction.onabort = error;
 				transaction.onerror = error;
 			} )
@@ -144,6 +178,33 @@ export async function getStoredItem< T >( key: string ): Promise< T | undefined 
 	}
 
 	return await idbGet( key );
+}
+
+/**
+ * Get all stored items.
+ *
+ * @returns A promise with the stored key/value pairs as an object. Empty if none.
+ */
+export async function getAllStoredItems< T >(): Promise< { [ key: string ]: T } > {
+	if ( shouldBypass ) {
+		return await bypassGetAll();
+	}
+
+	const idbSupported = await supportsIDB();
+	if ( ! idbSupported ) {
+		const results: { [ key: string ]: T } = {};
+		for ( let i = 0; i < window.localStorage.length; i++ ) {
+			const key = window.localStorage.key( i );
+			if ( ! key ) {
+				continue;
+			}
+			const valueString = window.localStorage.getItem( key ) ?? undefined;
+			results[ key ] = valueString !== undefined ? JSON.parse( valueString ) : undefined;
+		}
+		return results;
+	}
+
+	return await idbGetAll();
 }
 
 /**

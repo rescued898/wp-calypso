@@ -11,7 +11,18 @@ const debug = debugModule( 'calypso:support-user' );
 // a user's data while support-user is active, ensuring it does not contaminate
 // the original user, and vice versa.
 
-const memoryStore = new Map< string, any >();
+const memoryStore = new Map();
+
+export async function getAllStoredItems< T >(): Promise< { [ key: string ]: T } > {
+	debug( 'browser-storage bypass', 'getAllStoredItems' );
+
+	// TODO: Replace below with Object.fromEntries when it's available (needs core-js@3).
+	const results: { [ key: string ]: T } = {};
+	for ( const [ key, value ] of memoryStore.entries() ) {
+		results[ key ] = value;
+	}
+	return results;
+}
 
 export async function getStoredItem< T >( key: string ): Promise< T | undefined > {
 	debug( 'browser-storage bypass', 'getStoredItem', key );
