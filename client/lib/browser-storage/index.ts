@@ -41,7 +41,7 @@ const getDB = once( () => {
 	} );
 } );
 
-const supportsIDB = once( async () => {
+export const supportsIDB = once( async () => {
 	if ( typeof window === 'undefined' || ! window.indexedDB ) {
 		return false;
 	}
