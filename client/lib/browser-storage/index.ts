@@ -9,6 +9,7 @@ import {
 	clearStorage as bypassClear,
 	activate as activateBypass,
 } from './bypass';
+import { StoredItems } from './types';
 
 let shouldBypass = false;
 
@@ -76,11 +77,11 @@ function idbGet< T >( key: string ): Promise< T | undefined > {
 
 type EventTargetWithCursorResult = EventTarget & { result: IDBCursorWithValue | null };
 
-function idbGetAll< T >(): Promise< { [ key: string ]: T } > {
+function idbGetAll( pattern?: RegExp ): Promise< StoredItems > {
 	return new Promise( ( resolve, reject ) => {
 		getDB()
 			.then( db => {
-				const results: { [ key: string ]: T } = {};
+				const results: StoredItems = {};
 				const transaction = db.transaction( STORE_NAME, 'readonly' );
 				const getAll = transaction.objectStore( STORE_NAME ).openCursor();
 
@@ -88,7 +89,7 @@ function idbGetAll< T >(): Promise< { [ key: string ]: T } > {
 					const cursor = ( event?.target as EventTargetWithCursorResult )?.result;
 					if ( cursor ) {
 						const { primaryKey: key, value } = cursor;
-						if ( key && typeof key === 'string' && key !== SANITY_TEST_KEY ) {
+						if ( key && typeof key === 'string' && ( ! pattern || pattern?.test( key ) ) ) {
 							results[ key ] = value;
 						}
 						cursor.continue();
@@ -183,19 +184,20 @@ export async function getStoredItem< T >( key: string ): Promise< T | undefined 
 /**
  * Get all stored items.
  *
+ * @param pattern The pattern to match on returned item keys.
  * @returns A promise with the stored key/value pairs as an object. Empty if none.
  */
-export async function getAllStoredItems< T >(): Promise< { [ key: string ]: T } > {
+export async function getAllStoredItems( pattern?: RegExp ): Promise< StoredItems > {
 	if ( shouldBypass ) {
-		return await bypassGetAll();
+		return await bypassGetAll( pattern );
 	}
 
 	const idbSupported = await supportsIDB();
 	if ( ! idbSupported ) {
-		const results: { [ key: string ]: T } = {};
+		const results: StoredItems = {};
 		for ( let i = 0; i < window.localStorage.length; i++ ) {
 			const key = window.localStorage.key( i );
-			if ( ! key ) {
+			if ( ! key || ( pattern && ! pattern?.test( key ) ) ) {
 				continue;
 			}
 			const valueString = window.localStorage.getItem( key ) ?? undefined;
@@ -204,7 +206,7 @@ export async function getAllStoredItems< T >(): Promise< { [ key: string ]: T } 
 		return results;
 	}
 
-	return await idbGetAll();
+	return await idbGetAll( pattern );
 }
 
 /**
