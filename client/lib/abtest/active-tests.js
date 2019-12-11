@@ -71,14 +71,6 @@ export default {
 		defaultVariation: 'noOffer',
 		allowExistingUsers: true,
 	},
-	popularPlanBy: {
-		datestamp: '20190529',
-		variations: {
-			siteType: 0,
-			customerType: 100,
-		},
-		defaultVariation: 'siteType',
-	},
 	skippableDomainStep: {
 		datestamp: '20290717',
 		variations: {
@@ -131,5 +123,15 @@ export default {
 		},
 		defaultVariation: 'control',
 		allowExistingUsers: true,
+	},
+	showBusinessPlanPopular: {
+		datestamp: '20191211',
+		variations: {
+			variantShowBizPopular: 20,
+			control: 80,
+		},
+		defaultVariation: 'control',
+		allowExistingUsers: true,
+		localeTargets: 'any',
 	},
 };
